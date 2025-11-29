@@ -1,0 +1,63 @@
+{% schema %}
+{
+  "name": "Header",
+  "settings": [
+    {
+      "type": "link_list",
+      "id": "menu",
+      "default": "main-menu",
+      "label": "Menu"
+    }
+  ]
+}
+{% endschema %}
+
+<header class="header-wrapper">
+  <div class="header container">
+    <div class="header__logo">
+      {% if settings.logo_image != blank %}
+        <a href="{{ routes.root_url }}" class="header__logo-link">
+          <img src="{{ settings.logo_image | image_url: width: 200 }}" alt="{{ shop.name }}" class="header__logo-image">
+        </a>
+      {% else %}
+        <a href="{{ routes.root_url }}" class="header__logo-link">
+          <span class="header__logo-text">{{ settings.logo_text | default: shop.name }}</span>
+        </a>
+      {% endif %}
+    </div>
+
+    <nav class="header__nav" role="navigation" aria-label="Primary">
+      <ul class="header__menu">
+        {% for link in linklists[section.settings.menu].links %}
+          <li class="header__menu-item">
+            <a href="{{ link.url }}" class="header__menu-link">{{ link.title }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </nav>
+
+    <div class="header__icons">
+      <a href="{{ routes.search_url }}" class="header__icon-link" aria-label="Search">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16zM19 19l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <a href="{{ routes.cart_url }}" class="header__icon-link cart-link" aria-label="Cart">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M5 7h10l-1 7H6L5 7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="7.5" cy="17.5" r="1.5" fill="currentColor"/>
+          <circle cx="13.5" cy="17.5" r="1.5" fill="currentColor"/>
+          <path d="M3 7h1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span class="cart-count" data-cart-count>{{ cart.item_count }}</span>
+      </a>
+    </div>
+
+    <button class="header__mobile-toggle" aria-label="Toggle menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+</header>
+

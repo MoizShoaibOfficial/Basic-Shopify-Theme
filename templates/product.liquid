@@ -1,0 +1,139 @@
+<div class="product-page container">
+  <div class="product-page__grid">
+    <div class="product-page__images">
+      {% if product.featured_image %}
+        <div class="product-page__main-image">
+          <img 
+            src="{{ product.featured_image | image_url: width: 800 }}" 
+            alt="{{ product.featured_image.alt | escape }}"
+            id="ProductImage"
+            loading="lazy"
+          >
+        </div>
+      {% endif %}
+      
+      {% if product.images.size > 1 %}
+        <div class="product-page__thumbnails">
+          {% for image in product.images %}
+            <button class="product-page__thumbnail" data-image-id="{{ image.id }}">
+              <img src="{{ image | image_url: width: 150 }}" alt="{{ image.alt | escape }}" loading="lazy">
+            </button>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="product-page__info">
+      <h1 class="product-page__title">{{ product.title }}</h1>
+      
+      <div class="product-page__price">
+        <span class="price">{{ product.selected_or_first_available_variant.price | money }}</span>
+        {% if product.selected_or_first_available_variant.compare_at_price > product.selected_or_first_available_variant.price %}
+          <span class="price price--compare">{{ product.selected_or_first_available_variant.compare_at_price | money }}</span>
+        {% endif %}
+      </div>
+
+      <div class="product-page__description">
+        {{ product.description }}
+      </div>
+
+      <form action="{{ routes.cart_add_url }}" method="post" enctype="multipart/form-data" id="product-form">
+        {% unless product.has_only_default_variant %}
+          {% for option in product.options_with_values %}
+            <div class="product-page__option">
+              <label for="Option-{{ forloop.index0 }}">{{ option.name }}</label>
+              <select 
+                name="options[{{ option.name | escape }}]" 
+                id="Option-{{ forloop.index0 }}"
+                class="product-page__select"
+              >
+                {% for value in option.values %}
+                  <option value="{{ value | escape }}" {% if option.selected_value == value %}selected{% endif %}>
+                    {{ value }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          {% endfor %}
+        {% endunless %}
+
+        <input type="hidden" name="id" id="product-variant-id" value="{{ product.selected_or_first_available_variant.id }}">
+
+        <div class="product-page__quantity">
+          <label for="Quantity">Quantity</label>
+          <input 
+            type="number" 
+            id="Quantity" 
+            name="quantity" 
+            value="1" 
+            min="1" 
+            class="product-page__quantity-input"
+          >
+        </div>
+
+        <button 
+          type="submit" 
+          name="add" 
+          class="product-page__button button button--primary"
+          {% unless product.selected_or_first_available_variant.available %}disabled{% endunless %}
+        >
+          {% if product.selected_or_first_available_variant.available %}
+            Add to Cart
+          {% else %}
+            Sold Out
+          {% endif %}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const variantSelects = document.querySelectorAll('.product-page__select');
+    const variantIdInput = document.getElementById('product-variant-id');
+    const productForm = document.getElementById('product-form');
+    
+    variantSelects.forEach(select => {
+      select.addEventListener('change', updateVariant);
+    });
+
+    function updateVariant() {
+      const selectedOptions = Array.from(variantSelects).map(select => select.value);
+      const variant = {{ product.variants | json }}.find(v => {
+        return v.options.every((option, index) => option === selectedOptions[index]);
+      });
+
+      if (variant) {
+        variantIdInput.value = variant.id;
+        document.querySelector('.price').textContent = new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: '{{ cart.currency.iso_code }}'
+        }).format(variant.price / 100);
+        
+        const addButton = productForm.querySelector('button[type="submit"]');
+        if (variant.available) {
+          addButton.disabled = false;
+          addButton.textContent = 'Add to Cart';
+        } else {
+          addButton.disabled = true;
+          addButton.textContent = 'Sold Out';
+        }
+      }
+    }
+
+    // Image thumbnail selection
+    const thumbnails = document.querySelectorAll('.product-page__thumbnail');
+    const mainImage = document.getElementById('ProductImage');
+    
+    thumbnails.forEach(thumbnail => {
+      thumbnail.addEventListener('click', function() {
+        const img = this.querySelector('img');
+        mainImage.src = img.src.replace('width=150', 'width=800');
+        thumbnails.forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  });
+</script>
+

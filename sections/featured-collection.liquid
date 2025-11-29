@@ -1,0 +1,65 @@
+{% schema %}
+{
+  "name": "Featured Collection",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Featured Collection"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "min": 2,
+      "max": 12,
+      "step": 2,
+      "default": 4,
+      "label": "Products to show"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Featured Collection"
+    }
+  ]
+}
+{% endschema %}
+
+{% if section.settings.collection != blank %}
+  <section class="featured-collection container">
+    <h2 class="featured-collection__title">{{ section.settings.title }}</h2>
+    <div class="featured-collection__grid">
+      {% for product in collections[section.settings.collection].products limit: section.settings.products_to_show %}
+        <div class="product-card">
+          <a href="{{ product.url }}" class="product-card__link">
+            {% if product.featured_image %}
+              <div class="product-card__image">
+                <img 
+                  src="{{ product.featured_image | image_url: width: 400 }}" 
+                  alt="{{ product.featured_image.alt | escape }}"
+                  loading="lazy"
+                >
+              </div>
+            {% endif %}
+            <div class="product-card__info">
+              <h3 class="product-card__title">{{ product.title }}</h3>
+              <div class="product-card__price">
+                <span class="price">{{ product.price | money }}</span>
+                {% if product.compare_at_price > product.price %}
+                  <span class="price price--compare">{{ product.compare_at_price | money }}</span>
+                {% endif %}
+              </div>
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+{% endif %}
+
